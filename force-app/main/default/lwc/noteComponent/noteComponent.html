@@ -1,0 +1,42 @@
+<!-- sldsValidatorIgnore -->
+<!-- sldsValidatorIgnore -->
+<template>
+    <lightning-card title="Notes" icon-name="standard:note">
+        <lightning-button label="New" variant="brand" slot="actions" onclick={handleClickNew}></lightning-button>
+        <div class="slds-p-horizontal_small">
+            <div>
+                Case ID: {recordId}
+                Account ID: {accountId}   
+                <lightning-card>
+                    <template if:true={notesRelatedToAccount.length}>
+                        <lightning-datatable
+                            key-field="Id"
+                            data={notesRelatedToAccount}
+                            columns={columns}
+                            hide-checkbox-column="true"
+                            onrowaction={handleRowAction}></lightning-datatable>
+                    </template>
+                </lightning-card>
+            </div>
+        </div>
+        <p slot="footer">Show All</p>
+    </lightning-card>
+
+    <div if:true={isModalOpen}>
+        <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open slds-modal_large">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={handleModalClose}>
+                        <lightning-icon icon-name="utility:close" alternative-text="Close" variant="inverse"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="modal-heading-01" class="slds-text-heading_medium slds-hyphenate">Create Note</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <c-create-note onnotecreated={handleNoteCreated}></c-create-note>
+                </div>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </div>
+</template>

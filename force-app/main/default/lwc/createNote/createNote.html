@@ -1,0 +1,8 @@
+<template>
+    <div class="slds-box">
+        <h2>Create Note</h2>
+        <lightning-input label="Title" value={noteTitle} onchange={handleTitleChange}></lightning-input>
+        <lightning-textarea label="Body" value={noteBody} onchange={handleBodyChange}></lightning-textarea>
+        <lightning-button label="Save" variant="brand" onclick={handleSaveClick}></lightning-button>
+    </div>
+</template>
