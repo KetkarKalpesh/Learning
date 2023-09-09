@@ -8,8 +8,8 @@ public class BatchNotifySubsWebsite implements Database.Batchable<SObject> {
   }
 
   public Database.QueryLocator start(Database.BatchableContext context) {
-    String queryOpportunities = 'select Id, Name, createdDate, AccountID, OwnerId, (SELECT Id, Product__r.ProductCode, Product__r.Name, Original_Expiry_Date__c, Subscription_Status__c FROM Subscription_Products__r WHERE Subscription_Status__c = \'Active\') FROM Opportunity';
-    String varQuery = ' WHERE CreatedDate >= 2023-08-29T15:20:02Z AND CreatedDate <= 2023-09-05T00:00:00Z';
+    String queryOpportunities = 'select Id, Name, createdDate, AccountID, Account.OwnerId, OwnerId, (SELECT Id, Product__r.ProductCode, Product__r.Name, Original_Expiry_Date__c, Subscription_Status__c FROM Subscription_Products__r WHERE Subscription_Status__c = \'Active\') FROM Opportunity';
+    String varQuery = ' WHERE CreatedDate >= 2023-08-29T15:20:02Z AND CreatedDate <= 2023-09-10T00:00:00Z';
 
     //if (!Test.isRunningTest()) {
     queryOpportunities += varQuery;
@@ -25,76 +25,68 @@ public class BatchNotifySubsWebsite implements Database.Batchable<SObject> {
     List<Task> tasksToInsert = new List<Task>();
     List<Opportunity> opportunitiesToSendEmail = new List<Opportunity>();
 
-    // List<Local_Search__c> productCodes = [select Id, Product_Codes__c FROM Local_Search__c]; // Limit query to one record
-    // String productCodesString = productCodes.isEmpty() ? ''  : productCodes[0].Product_Codes__c;
+    LocalSearch__mdt metadataRecs = [
+      SELECT Product_Codes__c
+      FROM LocalSearch__mdt
+      LIMIT 1
+    ]; // Limit query to one record
 
-    // if (!String.isBlank(productCodesString)) {
-    //   List<String> websiteProductcodes = productCodesString.split(',');
-    //   system.debug('websiteProductcodes ' + websiteProductcodes);
+    List<String> ProductCodes = new List<String>();
 
-    List<string> websiteProductcodes = new List<string>();
-    websiteProductcodes.add('151');
-    websiteProductcodes.add('152');
-    websiteProductcodes.add('153');
-    websiteProductcodes.add('154');
-    websiteProductcodes.add('155');
-    system.debug('websiteProductcodes :' + websiteProductcodes);
+    if (!String.isBlank(metadataRecs.Product_Codes__c)) {
+      ProductCodes = metadataRecs.Product_Codes__c.split(',');
+      system.debug('ProductCodes ' + ProductCodes);
+    }
 
     for (Opportunity opp : opportunities) {
       Boolean foundDiscountProduct = false;
       Boolean foundWebsiteProduct = false;
+      String opportunityId = opp.AccountId;
+      String ownerId = opp.Account.OwnerId;
 
       for (Subscription_Product__c subProduct : opp.Subscription_Products__r) {
         Date termEndDate = subProduct.Original_Expiry_Date__c;
         String productCode = subProduct.Product__r.ProductCode;
 
-        String OpportunityId = opp.AccountId;
-        String OwnerId = opp.OwnerId;
+        if (productCode == '260') {
+          foundDiscountProduct = true;
+          if (foundWebsiteProduct) {
+            break;
+          }
+        }
 
         if (
+          !ProductCodes.isEmpty() &&
+          ProductCodes.contains(productCode) &&
           termEndDate != null &&
-          termEndDate == Date.today().addDays(this.daysToGo) &&
-          productCode == '260'
+          termEndDate == Date.today().addDays(daysToGo)
         ) {
-          foundDiscountProduct = true;
-          system.debug('Executed 1');
-          system.debug('Executed 1 =======> ' + productCode);
-        }
-
-        if (websiteProductcodes.contains(productCode)) {
           foundWebsiteProduct = true;
-          system.debug('Executed 3 =======> ' + productCode);
-        }
-
-        if (foundDiscountProduct) {
-          system.debug('Executed 4');
-          if (this.operation == 'createTask') {
-            // Create Task
-            Task task = new Task();
-
-            task.WhoId = OpportunityId;
-
-            task.Subject = 'TBC';
-            task.Status = 'Not Started';
-            task.Priority = 'High';
-            task.ActivityDate = Date.today().addDays(1);
-            task.OwnerId = OwnerId;
-            tasksToInsert.add(task);
-          }
-
-          if (this.operation == 'sendEmail') {
-            opportunitiesToSendEmail.add(opp);
+          if (foundDiscountProduct) {
+            break;
           }
         }
       }
-      //}
-    }
+      if (foundDiscountProduct && foundDiscountProduct) {
+        if (this.operation == 'createTask') {
+          // Create Task
+          Task task = new Task();
 
-    System.debug('Number of tasks to insert: ' + tasksToInsert.size());
-    System.debug(
-      'Number of opportunities to send email: ' +
-      opportunitiesToSendEmail.size()
-    );
+          task.WhatId = opportunityId;
+
+          task.Subject = 'Website Subscription Offer Ending Soon!';
+          task.Status = 'Not Started';
+          task.Priority = 'High';
+          task.ActivityDate = Date.today().addDays(1);
+          task.OwnerId = Opp.OwnerId;
+          tasksToInsert.add(task);
+        }
+
+        if (this.operation == 'sendEmail') {
+          opportunitiesToSendEmail.add(opp);
+        }
+      }
+    }
 
     // Insert tasks
     if (!tasksToInsert.isEmpty()) {
