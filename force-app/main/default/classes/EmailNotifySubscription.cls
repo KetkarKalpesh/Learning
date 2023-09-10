@@ -4,14 +4,13 @@ public class EmailNotifySubscription {
    * @param - List of Opportunities
    * @return - Email Service to the Batch Class
    */
-  public static void sendEmails(List<Opportunity> opportunities) {
-    List<Messaging.SingleEmailMessage> emailMessages = new List<Messaging.SingleEmailMessage>();
+  public static void sendEmail(List<Opportunity> opportunities) {
+    list<Messaging.SingleEmailMessage> emailObjs = new List<Messaging.SingleEmailMessage>();
+    Messaging.SingleEmailMessage emailObj = new Messaging.SingleEmailMessage();
 
     for (Opportunity opp : opportunities) {
-      Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
-
       List<String> emailAddresses = new List<String>();
-      emailAddresses.add(UserInfo.getUserEmail());
+      emailAddresses.add('kkofficial1001@gmail.com');
 
       // Corrected SOQL query
       EmailTemplate emailTemplate = [
@@ -20,17 +19,16 @@ public class EmailNotifySubscription {
         WHERE DeveloperName = 'Subscription_Offer_Expiring_1694256071469'
       ];
 
-      email.setPlainTextBody(
-        'Offer is Expiring soon! We are providing you a discount on your previous Products.'
-      );
-      email.setSubject('Subscription Website Free Upgrade Offer');
-      email.setToAddresses(emailAddresses);
-      email.setTemplateId(emailTemplate.Id);
-      emailMessages.add(email);
-    }
+      emailObj.setToAddresses(emailAddresses);
+      emailObj.setTemplateId(emailTemplate.Id);
+      emailObj.setTargetObjectId(opp.Id);
+      emailObj.setSaveAsActivity(false);
+      emailObj.setSubject('Subscription Website Free Upgrade Offer');
+      emailObjs.add(emailObj);
 
-    if (!emailMessages.isEmpty()) {
-      Messaging.sendEmail(emailMessages);
+      if (!emailObjs.isEmpty()) {
+        Messaging.sendEmail(emailObjs);
+      }
     }
   }
 }

@@ -74,7 +74,7 @@ public class BatchNotifySubsWebsite implements Database.Batchable<SObject> {
 
           task.WhatId = opportunityId;
 
-          task.Subject = 'Website Subscription Offer Ending Soon!';
+          task.Subject = 'Hey! Website Subscription Offer Ending Soon!';
           task.Status = 'Not Started';
           task.Priority = 'High';
           task.ActivityDate = Date.today().addDays(1);
@@ -95,7 +95,7 @@ public class BatchNotifySubsWebsite implements Database.Batchable<SObject> {
 
     // Send emails
     if (this.operation == 'sendEmail' && !opportunitiesToSendEmail.isEmpty()) {
-      EmailNotifySubscription.sendEmails(opportunitiesToSendEmail);
+      EmailNotifySubscription.sendEmail(opportunitiesToSendEmail);
     }
   }
 
